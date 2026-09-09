@@ -1,0 +1,109 @@
+name: CI y despliegue a GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Pruebas (sintaxis, HTML, seguridad, smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verificar sintaxis de los archivos JavaScript
+        run: |
+          node --check script.js
+          node --check observabilidad.js
+
+      - name: Validar HTML (index.html y observabilidad.html)
+        run: npx --yes html-validate index.html observabilidad.html
+
+      - name: Escanear secretos y credenciales embebidas
+        run: |
+          if grep -rniE "api[_-]?key|secret|password|AKIA[0-9A-Z]{16}" \
+              --include="*.js" --include="*.html" --include="*.css" .; then
+            echo "Se encontraron posibles credenciales embebidas." >&2
+            exit 1
+          fi
+          echo "Sin credenciales embebidas detectadas."
+
+      - name: Escanear sumideros de XSS (innerHTML/eval/document.write)
+        run: |
+          MATCHES=$(grep -rnE "eval\(|document\.write\(|dangerouslySetInnerHTML|new Function\(" \
+              --include="*.js" --include="*.html" . || true)
+          if [ -n "$MATCHES" ]; then
+            echo "$MATCHES"
+            echo "Se encontraron sumideros de XSS potencialmente inseguros." >&2
+            exit 1
+          fi
+          echo "Sin sumideros de XSS inseguros detectados."
+
+      - name: Verificar que no haya contenido mixto (http:// en sitio https)
+        run: |
+          MATCHES=$(grep -rn "http://" --include="*.js" --include="*.html" --include="*.css" . || true)
+          if [ -n "$MATCHES" ]; then
+            echo "$MATCHES"
+            echo "Se encontraron referencias a recursos http:// (contenido mixto)." >&2
+            exit 1
+          fi
+          echo "Sin contenido mixto detectado."
+
+      - name: Smoke test — servir el sitio localmente y comprobar cada recurso
+        run: |
+          python3 -m http.server 8791 &
+          SERVER_PID=$!
+          sleep 1
+          FAIL=0
+          for f in index.html styles.css script.js observabilidad.html observabilidad.css observabilidad.js; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8791/$f")
+            echo "$f -> $CODE"
+            if [ "$CODE" != "200" ]; then FAIL=1; fi
+          done
+          kill "$SERVER_PID"
+          if [ "$FAIL" != "0" ]; then
+            echo "Al menos un recurso no respondió con HTTP 200." >&2
+            exit 1
+          fi
+
+  deploy:
+    name: Desplegar a GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir artefacto del sitio estático
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

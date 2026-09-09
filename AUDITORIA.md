@@ -1,61 +1,195 @@
-# Informe de Auditoría de Accesibilidad (WCAG 2.2 AA), UX y Diseño Responsive
+# Informe de Auditoría de Accesibilidad (WCAG 2.2 AA), UX, Diseño Responsive y Seguridad
 
-**Fecha de evaluación:** 7 de septiembre de 2026  
-**Archivos auditados:** `index.html`, `styles.css`, `script.js`  
-**Tipo de auditoría:** Estática y no destructiva (análisis de código fuente, reglas semánticas, cálculo de ratios de contraste y responsive)
+**Fecha de evaluación inicial:** 7 de septiembre de 2026
+**Fecha de seguimiento (verificación de correcciones + pruebas de seguridad):** 9 de septiembre de 2026
+**Archivos auditados:** `index.html`, `styles.css`, `script.js`, `observabilidad.html`, `observabilidad.css`, `observabilidad.js`
+**Tipo de auditoría:** Estática y no destructiva (análisis de código fuente, reglas semánticas, cálculo de ratios de contraste, responsive) + pruebas dinámicas básicas (sintaxis, validación HTML, smoke test local y en producción)
+
+---
+
+## 0. Registro de Actualizaciones
+
+| Fecha | Cambio |
+| :--- | :--- |
+| 2026-09-07 | Auditoría inicial de `index.html`, `styles.css`, `script.js`. 11 hallazgos (H-01 a H-11). |
+| 2026-09-09 | Se verifican correcciones de los 11 hallazgos iniciales (ver §2). Se audita el nuevo módulo `observabilidad.*` (3 hallazgos nuevos, H-12 a H-14, ver §3.5). Se ejecutan pruebas de seguridad y pruebas básicas (ver §6). Se publica el sitio en GitHub Pages (ver §7). |
 
 ---
 
 ## 1. Resumen Ejecutivo
 
-El sitio web presenta una base sólida en cuanto a estructura semántica HTML5, tipografía legible, jerarquía de encabezados lineal y atributos descriptivos en elementos multimedia. No se identificaron bloqueos críticos (*showstoppers*) que impidan completamente el acceso al contenido.
+El sitio partió de una base sólida en estructura semántica HTML5, tipografía legible, jerarquía de encabezados lineal y atributos descriptivos en elementos multimedia. La auditoría inicial (7 de septiembre) identificó **3 hallazgos de severidad alta**, **4 de severidad media** y **4 de severidad baja**.
 
-Sin embargo, se han detectado **3 hallazgos de severidad alta**, **4 de severidad media** y **4 de severidad baja** relacionados principalmente con:
-1. **Contraste no textual insuficiente** en el anillo de foco (`:focus-visible`) sobre fondos claros.
-2. **Ausencia de mecanismo de salto** (*Skip link*) para eludir la navegación repetitiva.
-3. **Inconsistencia de estado en el acordeón de la trayectoria**, donde el contenido se oculta visualmente pero no semánticamente ante lectores de pantalla.
-4. **Degradación de la experiencia de usuario móvil (320px y 390px)** ocasionada por una cabecera fija (*sticky header*) que ocupa un porcentaje excesivo de la pantalla al envolver los enlaces.
-5. **Áreas táctiles (*touch targets*) por debajo del estándar recomendado** en enlaces de navegación móvil y falta de gestión para `prefers-reduced-motion`.
+En la verificación de seguimiento (9 de septiembre) se confirma que **los 11 hallazgos originales fueron corregidos** en el código actual (ver matriz de verificación en §2). Adicionalmente se incorporó un nuevo módulo de **observabilidad local** (`observabilidad.html/css/js`), que registra rendimiento, errores y clics exclusivamente en `localStorage` del navegador del usuario, sin backend ni envío de datos a terceros. Este módulo fue auditado de forma independiente, con **0 hallazgos críticos o altos**, **1 hallazgo medio** y **2 hallazgos bajos** (H-12 a H-14, §3.5).
+
+Se ejecutaron pruebas de seguridad básicas (búsqueda de sumideros de XSS, secretos embebidos, contenido mixto, enlaces externos inseguros) y pruebas funcionales básicas (validación de sintaxis JS, validación HTML, smoke test de todos los recursos en local y en producción). Ningún hallazgo crítico de seguridad fue detectado. El sitio ya se encuentra publicado y accesible públicamente en GitHub Pages (§7).
 
 ---
 
-## 2. Criterios que Cumplen Satisfactoriamente
+## 2. Verificación de Correcciones Aplicadas (Hallazgos Originales H-01 a H-11)
 
-| Criterio / Aspecto | Estado | Justificación técnica |
-| :--- | :---: | :--- |
-| **Idioma de la página (WCAG 3.1.1)** | **CUMPLE** | `index.html` declara `<html lang="es">` correctamente. |
-| **Jerarquía de encabezados (WCAG 1.3.1, 2.4.6)** | **CUMPLE** | Existe un único `<h1>` en la sección hero y todos los títulos de sección utilizan `<h2>` sin saltos de nivel. |
-| **Estructura semántica (WCAG 1.3.1)** | **CUMPLE** | Uso apropiado de `<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<figure>`, `<figcaption>` y `<footer>`. |
-| **Contraste de texto principal (WCAG 1.4.3)** | **CUMPLE** | Texto general (`#1a1a1a` sobre `#ffffff` y `#f4f5f7`) con ratio $\ge 14.8:1$. Títulos, números destacados y textos de cabecera/pie superan ampliamente el mínimo de $4.5:1$. |
-| **Textos alternativos en imágenes (WCAG 1.1.1)** | **CUMPLE** | Las tres imágenes en `<figure>` contienen atributos `alt` descriptivos y contextuales. |
-| **Uso de controles nativos (WCAG 4.1.2)** | **CUMPLE** | La navegación usa enlaces `<a>` con `href` válidos y el acordeón interactivo usa elementos `<button>` nativos en lugar de `<div>` con eventos de clic. |
-| **Ausencia de scroll horizontal a 320px (WCAG 1.4.10)** | **CUMPLE** | El uso de `box-sizing: border-box`, `max-width: 100%` en imágenes y rejillas fluidas (`auto-fit`, `minmax`) evita el desbordamiento horizontal en 320px, 390px y 768px. |
-| **Sintaxis JavaScript (Robustez)** | **CUMPLE** | Archivo `script.js` sintácticamente válido, ejecuta sin dependencias externas y escucha `DOMContentLoaded`. |
+| ID | Hallazgo | Severidad original | Estado (2026-09-09) | Evidencia de corrección |
+| :-- | :-- | :--: | :--: | :-- |
+| H-01 | Contraste insuficiente en `:focus-visible` | 🟠 Alto | ✅ Resuelto | `styles.css:38-47` usa `--color-primary` como color de foco general y `--color-accent` solo sobre fondos oscuros de header/footer, tal como se recomendó. |
+| H-02 | Ausencia de *skip link* | 🟠 Alto | ✅ Resuelto | `index.html:12` añade `<a href="#inicio" class="skip-link">`; estilos en `styles.css:61-77`. |
+| H-03 | Acordeón de trayectoria sin sincronía ARIA/DOM | 🟠 Alto | ✅ Resuelto | `index.html:75-141` vincula cada botón con `aria-controls` + `id`, y cada panel usa `hidden`, `role="region"` y `aria-labelledby`. `script.js:16` sincroniza `detail.hidden = isOpen`. |
+| H-04 | Cabecera *sticky* ocupa demasiada pantalla en móvil | 🟡 Medio | ✅ Resuelto | `styles.css:319-322` desactiva `position: sticky` (pasa a `static`) por debajo de 600px. |
+| H-05 | Objetivos táctiles reducidos en navegación | 🟡 Medio | ✅ Resuelto | `styles.css:117-123` añade `padding: 0.5rem 0.6rem` y `display: inline-block` a `.main-nav a`. |
+| H-06 | Enlace a Wikipedia sin aviso de nueva pestaña | 🟡 Medio | ✅ Resuelto | `index.html:215` agrega `<span class="visually-hidden">(se abre en una nueva pestaña)</span>`. |
+| H-07 | Imágenes sin `width`/`height` (riesgo CLS) | 🟡 Medio | ✅ Resuelto | `index.html:178-179, 188-189, 198-199` declara `width` y `height` explícitos en las tres imágenes de la galería. |
+| H-08 | Sin soporte para `prefers-reduced-motion` | 🔵 Bajo | ✅ Resuelto | `styles.css:341-350` desactiva `scroll-behavior` y transiciones/animaciones bajo esa media query. |
+| H-09 | Falta de programación defensiva en `script.js` | 🔵 Bajo | ✅ Resuelto | `script.js:9` agrega `if (!toggleButton || !detail) return;`. |
+| H-10 | Etiqueta "Contacto" incoherente con el contenido | 🔵 Bajo | ✅ Resuelto | `index.html:23` renombra el enlace del menú a "Referencias". |
+| H-11 | Redundancia textual `alt` / `figcaption` en galería | 🔵 Bajo | ✅ Resuelto | Los `alt` actuales describen composición visual específica (encuadre, gesto, expresión) mientras los `figcaption` aportan contexto editorial (evento, año, club), sin solaparse. |
+
+**Conclusión de la verificación:** 11/11 hallazgos originales corregidos correctamente, sin regresiones detectadas en el código circundante.
 
 ---
 
 ## 3. Matriz de Hallazgos
 
 ### Leyenda de Severidad
-- 🔴 **Crítico:** Impide totalmente el acceso o navegación para ciertos grupos de usuarios.
-- 🟠 **Alto:** Dificulta gravemente la accesibilidad o incumple directamente criterios de conformidad WCAG 2.2 AA.
-- 🟡 **Medio:** Degrada la experiencia de usuario (UX), accesibilidad secundaria o buenas prácticas responsive.
+- 🔴 **Crítico:** Impide totalmente el acceso o navegación para ciertos grupos de usuarios, o representa un riesgo de seguridad explotable.
+- 🟠 **Alto:** Dificulta gravemente la accesibilidad/seguridad o incumple directamente criterios de conformidad WCAG 2.2 AA.
+- 🟡 **Medio:** Degrada la experiencia de usuario (UX), accesibilidad secundaria, buenas prácticas responsive o de seguridad defensiva.
 - 🔵 **Bajo:** Mejora menor de usabilidad, robustez de código o refinamiento visual.
 
+### 3.1–3.4. Hallazgos Históricos (H-01 a H-11)
+
+Todos corregidos y verificados — ver detalle técnico completo de cada hallazgo, evidencia original y recomendación aplicada en el **Anexo A** al final de este documento. Se conserva el detalle original para trazabilidad, ya que las correcciones referencian esas recomendaciones exactas.
+
+### 3.5. Hallazgos Nuevos — Módulo de Observabilidad Local (`observabilidad.*`)
+
+Contexto: `observabilidad.js` se carga en ambas páginas (`index.html` y `observabilidad.html`) e instrumenta rendimiento de navegación, errores JS, clics y visibilidad de pestaña, guardando todo bajo el prefijo de clave `cr7-observability` **exclusivamente en `localStorage`**. No existe transmisión de red hacia servidores propios o de terceros (confirmado por inspección de código: no hay `fetch`, `XMLHttpRequest`, `navigator.sendBeacon`, `<img>` de tracking ni WebSockets en el archivo).
+
+#### [H-12] Acción destructiva "Limpiar almacenamiento" sin confirmación
+- **Severidad:** 🟡 Medio
+- **Criterio:** UX defensivo / Prevención de errores (WCAG 3.3.4 aplicado por analogía, aunque el criterio formal aplica a transacciones)
+- **Archivo afectado:** `observabilidad.html:40`, `observabilidad.js:521-527`
+- **Evidencia:** El botón `#cr7-clear` invoca `CR7Observability.clearAll()` de inmediato al primer clic, sin diálogo de confirmación (`confirm()` o modal accesible), borrando todos los eventos y la sesión capturada de forma irreversible.
+- **Impacto:** Un clic accidental (especialmente en móvil, donde los botones ocupan el 100% del ancho) elimina permanentemente el historial local sin posibilidad de deshacer.
+- **Recomendación de corrección:**
+  ```javascript
+  clearBtn.addEventListener("click", function () {
+    if (!window.confirm("¿Seguro que quieres borrar todos los datos locales de observabilidad? Esta acción no se puede deshacer.")) {
+      return;
+    }
+    window.CR7Observability.clearAll();
+    window.CR7Observability.captureSession();
+    refresh("Almacenamiento local limpiado.");
+  });
+  ```
+
+#### [H-13] Ausencia de `Content-Security-Policy` a nivel de documento
+- **Severidad:** 🔵 Bajo
+- **Criterio:** Defensa en profundidad (OWASP Secure Headers)
+- **Archivo afectado:** `index.html`, `observabilidad.html` (sección `<head>`)
+- **Evidencia:** Ninguna de las dos páginas define una política `Content-Security-Policy`, ni siquiera vía `<meta http-equiv="Content-Security-Policy">`. GitHub Pages no permite configurar cabeceras HTTP personalizadas para sitios estáticos servidos desde una rama, por lo que la única vía disponible es la etiqueta `<meta>`.
+- **Impacto:** Bajo en el estado actual (no hay entrada de datos de usuario que se inserte vía `innerHTML`, ni scripts de terceros), pero es una capa de defensa recomendable ante cambios futuros.
+- **Recomendación de corrección:**
+  ```html
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://upload.wikimedia.org; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'">
+  ```
+  (Ajustar `img-src` si cambian los orígenes de las imágenes de la galería.)
+
+#### [H-14] Captor de clics genérico sin lista de exclusión para campos sensibles futuros
+- **Severidad:** 🔵 Bajo (nota de diseño preventiva, no vulnerabilidad activa)
+- **Criterio:** Privacidad por diseño
+- **Archivo afectado:** `observabilidad.js:236-247` (`handleClick`), `225-234` (`describeElement`)
+- **Evidencia:** `handleClick` registra en `localStorage` el `textContent` (hasta 80 caracteres) y atributos (`id`, `className`, `href`) de **cualquier** elemento interactivo (`a, button, input, select, [role='button']`) que reciba clic en cualquier página donde se cargue el script. Hoy el sitio no tiene formularios ni campos con datos personales, por lo que no hay exposición real. Sin embargo, si en el futuro se agregan formularios (login, contacto, newsletter), el registrador capturaría automáticamente el contenido de esos controles sin redacción.
+- **Impacto potencial (futuro):** Si se añaden inputs de texto/checkbox con datos sensibles y se reutiliza este mismo script sin ajuste, su contenido podría quedar registrado en `localStorage` del propio usuario (no se transmite a servidores, pero sí queda persistido en el dispositivo más tiempo del necesario).
+- **Recomendación de corrección:** Antes de añadir formularios con datos personales, extender `describeElement` con una lista de exclusión (por ejemplo, `data-obs-ignore` o tipos de input sensibles) para omitir su contenido del registro.
+
+**Aspectos positivos verificados en el módulo:**
+- Todo el renderizado del panel (`renderSession`, `renderEvents`) usa `textContent`, nunca inserta HTML sin escapar proveniente de datos almacenados — **sin vector de XSS**, incluso si un usuario edita manualmente su propio `localStorage`.
+- Acceso a `localStorage` envuelto en `try/catch` con *fallback* a memoria (`hasLocalStorage`, `safeGetJSON`, `safeSetJSON`) — robusto ante modo privado o cuotas excedidas.
+- Límite duro de `MAX_EVENTS = 200` evita crecimiento indefinido del almacenamiento.
+- Controles con `type="button"` explícito, tamaño mínimo táctil de 44px (`min-height: 44px` en `observabilidad.css:151`) y soporte de `prefers-reduced-motion`.
+- Guard `if (window.CR7Observability) return;` evita doble inicialización si el script se incluye más de una vez.
+
 ---
 
-### 3.1. Hallazgos Críticos
+## 4. Pruebas que Deben Repetirse Tras las Correcciones (vigente)
+
+1. **Prueba de Contraste Automática y Manual:** re-confirmar con Color Contrast Analyzer que el anillo `:focus-visible` supera 3:1 en todos los fondos, incluyendo los del nuevo panel de observabilidad.
+2. **Prueba de Navegación por Teclado:** validar *skip links* (ambas páginas), navegación completa por `Tab` del acordeón y de los cuatro botones del panel de observabilidad.
+3. **Prueba con Lectores de Pantalla (NVDA/VoiceOver):** confirmar anuncio correcto de `aria-expanded`/`hidden` en el acordeón y del `role="status" aria-live="polite"` (`#cr7-status`) al pulsar los botones del panel.
+4. **Prueba de Dispositivos Móviles (320px, 390px, 768px, 1024px+):** incluir ahora `observabilidad.html`, cuyos botones pasan a `width: 100%` bajo 600px.
+5. **Prueba de Reducción de Movimiento:** verificar en ambas páginas.
+6. **Prueba manual del flujo de "Limpiar almacenamiento":** confirmar que, una vez aplicado H-12, el diálogo de confirmación se anuncia correctamente por lectores de pantalla.
+
+---
+
+## 5. Alcance de la Verificación Realizada vs. Pendiente de Prueba Manual
+
+### Qué se verificó exhaustivamente:
+- Análisis completo del código fuente de las 6 archivos del sitio (HTML/CSS/JS).
+- Verificación línea por línea de que los 11 hallazgos originales fueron corregidos según lo recomendado.
+- Auditoría de seguridad estática del nuevo módulo de observabilidad (sumideros de XSS, fugas de datos, secretos embebidos).
+- Ejecución de pruebas básicas automatizadas (ver §6): sintaxis JS, validación HTML, smoke test HTTP local y en producción.
+- Confirmación de publicación y accesibilidad pública del sitio en GitHub Pages, incluyendo HTTPS/HSTS.
+
+### Qué queda pendiente de probar manualmente:
+- Simulación en dispositivos móviles reales (iOS Safari, Android Chrome).
+- Pruebas con lectores de pantalla reales (NVDA, JAWS, VoiceOver, TalkBack), incluyendo el nuevo panel de observabilidad.
+- Confirmación visual del diálogo de confirmación una vez implementado H-12.
+- Prueba de carga de imágenes de Wikimedia Commons bajo conexión 3G simulada.
+
+---
+
+## 6. Pruebas de Seguridad y Pruebas Básicas Ejecutadas (2026-09-09)
+
+### 6.1. Pruebas básicas (funcionalidad y sintaxis)
+
+| Prueba | Comando | Resultado |
+| :-- | :-- | :--: |
+| Sintaxis `script.js` | `node --check script.js` | ✅ Sin errores |
+| Sintaxis `observabilidad.js` | `node --check observabilidad.js` | ✅ Sin errores |
+| Validación HTML | `npx html-validate index.html observabilidad.html` | ⚠️ 17 avisos de estilo (ver nota) |
+| Smoke test local (servidor estático) | `python3 -m http.server` + `curl` a los 6 archivos | ✅ Los 6 devuelven HTTP 200 |
+| Smoke test en producción (GitHub Pages) | `curl` a `https://chuchobck.github.io/ejml1/` y sus 5 recursos | ✅ Los 6 devuelven HTTP 200 |
+
+**Nota sobre `html-validate`:** los 17 avisos son de estilo, no funcionales: (a) preferencia por etiquetas de cierre omitidas en `<meta>`, `<link>`, `<img>` en vez de la sintaxis autocerrada `/>` (ambas son válidas en HTML5, es una preferencia de la guía de estilo por defecto de la herramienta); (b) sugerencia de usar `<section>` en vez de `<p role="region">` para los paneles del acordeón. Ninguno de los dos afecta el renderizado, la semántica accesible ni la seguridad; se documentan como mejora cosmética opcional, no como hallazgo.
+
+### 6.2. Pruebas de seguridad
+
+| Prueba | Método | Resultado |
+| :-- | :-- | :--: |
+| Sumideros de XSS (`innerHTML`, `eval`, `document.write`, `new Function`) | `grep` recursivo sobre `.js`/`.html` | ✅ Único uso de `innerHTML` es para vaciar contenedores (`= ""`); sin inserción de datos no confiables |
+| Secretos/credenciales embebidos (API keys, tokens, contraseñas) | `grep` con patrones de credenciales comunes | ✅ Ninguno encontrado |
+| Contenido mixto (recursos `http://` en sitio `https://`) | `grep "http://"` sobre todo el proyecto | ✅ Ninguno; todas las imágenes externas usan `https://` |
+| Enlaces externos inseguros (`target="_blank"` sin `rel="noopener noreferrer"`) | `grep` sobre `.html` | ✅ El único enlace externo (Wikipedia) ya incluye `rel="noopener noreferrer"` |
+| Exfiltración de datos del módulo de observabilidad | Revisión de `observabilidad.js` completo | ✅ Sin `fetch`/`XMLHttpRequest`/`sendBeacon`; todo persiste solo en `localStorage` |
+| Cabeceras de seguridad HTTP en producción | `curl -I https://chuchobck.github.io/ejml1/` | ✅ HSTS activo (`strict-transport-security: max-age=31556952`) y servido por HTTPS; ⚠️ sin `Content-Security-Policy` (ver H-13, limitación de la plataforma GitHub Pages) |
+
+**Conclusión de seguridad:** no se detectaron vulnerabilidades explotables (XSS, fuga de secretos, contenido mixto, *tabnabbing*). Los hallazgos H-12 a H-14 son de robustez/UX/defensa en profundidad, no exploits confirmados.
+
+---
+
+## 7. Estado de Publicación
+
+- **Plataforma:** GitHub Pages
+- **Repositorio:** `chuchobck/ejml1` (rama `main`, carpeta raíz `/`)
+- **URL pública:** https://chuchobck.github.io/ejml1/
+- **Verificación:** confirmado HTTP 200 en la página principal y en los 5 recursos restantes (`observabilidad.html`, `styles.css`, `script.js`, `observabilidad.css`, `observabilidad.js`) tras la activación del despliegue el 2026-09-09.
+- **HTTPS:** forzado, con `Strict-Transport-Security` activo.
+
+---
+
+## Anexo A — Detalle Técnico Original de los Hallazgos H-01 a H-11 (7 de septiembre de 2026)
+
+> Se conserva para trazabilidad. Todos los ítems de este anexo están marcados como **✅ Resueltos** en la verificación de §2.
+
+### A.1. Hallazgos Críticos
 *No se encontraron hallazgos de severidad crítica.*
 
----
-
-### 3.2. Hallazgos Altos
+### A.2. Hallazgos Altos
 
 #### [H-01] Contraste insuficiente en el indicador de foco visible (`:focus-visible`)
-- **Severidad:** 🟠 Alto
+- **Severidad:** 🟠 Alto — **Estado: ✅ Resuelto**
 - **Criterio WCAG:** 1.4.11 Non-text Contrast (Nivel AA) / 2.4.13 Focus Appearance (WCAG 2.2 AA)
-- **Archivo afectado:** `styles.css` (Líneas 38–42)
-- **Evidencia:**
+- **Archivo afectado (original):** `styles.css` (Líneas 38–42)
+- **Evidencia original:**
   ```css
   a:focus-visible,
   button:focus-visible {
@@ -63,260 +197,55 @@ Sin embargo, se han detectado **3 hallazgos de severidad alta**, **4 de severida
     outline-offset: 3px;
   }
   ```
-  La variable `--color-accent` (`#d4af37`, oro) sobre el fondo principal blanco (`#ffffff`) o gris claro (`#f4f5f7`) produce un ratio de contraste de **2.10:1**, el cual está **por debajo del mínimo obligatorio de 3:1** para componentes de la interfaz de usuario e indicadores de foco.
-- **Impacto:** Los usuarios que navegan exclusivamente con teclado pierden la referencia visual de dónde se encuentra el foco al recorrer los botones del acordeón o enlaces sobre fondo claro.
-- **Recomendación de corrección:**
-  Usar un color de foco de alto contraste sobre fondos claros (por ejemplo `var(--color-primary)` o `#0d1b2a`, que ofrece un ratio $> 14:1$), o adaptar el color de contorno según el contexto del contenedor:
-  ```css
-  a:focus-visible,
-  button:focus-visible {
-    outline: 3px solid var(--color-primary);
-    outline-offset: 3px;
-  }
-
-  .site-header a:focus-visible,
-  .site-footer a:focus-visible {
-    outline: 3px solid var(--color-accent); /* Válido aquí porque el fondo es oscuro */
-  }
-  ```
+  `--color-accent` (`#d4af37`) sobre fondo blanco/gris claro producía un ratio de **2.10:1**, por debajo del mínimo de 3:1.
+- **Corrección aplicada:** outline general con `--color-primary` (ratio > 14:1) y `--color-accent` reservado a fondos oscuros de header/footer.
 
 ---
 
 #### [H-02] Ausencia de enlace de salto al contenido principal (*Skip Link*)
-- **Severidad:** 🟠 Alto
+- **Severidad:** 🟠 Alto — **Estado: ✅ Resuelto**
 - **Criterio WCAG:** 2.4.1 Bypass Blocks (Nivel A)
-- **Archivo afectado:** `index.html` (Líneas 10–27)
-- **Evidencia:**
-  El documento inicia el `<body>` pasando directamente al `<header class="site-header">` con un menú de 5 enlaces sin ofrecer un mecanismo previo para eludir el bloque de navegación repetitivo.
-- **Impacto:** Usuarios con lectores de pantalla o navegación por pulsador/teclado se ven forzados a tabular repetidamente por la cabecera antes de llegar al contenido central.
-- **Recomendación de corrección:**
-  1. Añadir como primer hijo del `<body>` en `index.html`:
-     ```html
-     <a href="#inicio" class="skip-link">Saltar al contenido principal</a>
-     ```
-  2. Añadir estilos en `styles.css` para mantenerlo oculto visualmente hasta recibir foco:
-     ```css
-     .skip-link {
-       position: absolute;
-       top: -100px;
-       left: 1rem;
-       background: var(--color-accent);
-       color: var(--color-primary);
-       padding: 0.75rem 1.25rem;
-       font-weight: 700;
-       z-index: 1000;
-       border-radius: var(--radius);
-       text-decoration: none;
-       transition: top 0.2s ease;
-     }
-     .skip-link:focus {
-       top: 1rem;
-     }
-     ```
+- **Corrección aplicada:** `<a href="#inicio" class="skip-link">Saltar al contenido principal</a>` como primer hijo del `<body>`, con estilos que lo revelan al recibir foco.
 
 ---
 
 #### [H-03] Accesibilidad deficiente en el componente interactivo de Trayectoria (Acordeón)
-- **Severidad:** 🟠 Alto
+- **Severidad:** 🟠 Alto — **Estado: ✅ Resuelto**
 - **Criterio WCAG:** 4.1.2 Name, Role, Value (Nivel A) / 1.3.1 Info and Relationships (Nivel A)
-- **Archivos afectados:** `index.html` (Líneas 73–80), `styles.css` (Líneas 180–191), `script.js` (Líneas 8–13)
-- **Evidencia:**
-  1. En `index.html`: Los botones `<button class="timeline-toggle" aria-expanded="false">` no cuentan con el atributo `aria-controls="id-detalle"`, y los párrafos `.timeline-detail` no poseen un `id` asociado.
-  2. En `styles.css`: El colapso del contenido se realiza únicamente mediante `max-height: 0; overflow: hidden;`. Al no usar `visibility: hidden`, `display: none` o el atributo HTML `hidden`, el contenido textual sigue presente en el árbol de accesibilidad y puede ser leído por cursores virtuales de lectores de pantalla (NVDA / VoiceOver) aun cuando el botón anuncia estado "colapsado".
-- **Impacto:** Confusión para usuarios de tecnología de asistencia debido a la discrepancia entre el estado anunciado por ARIA y el contenido accesible en el DOM.
-- **Recomendación de corrección:**
-  1. En `index.html`: Vincular botones y paneles con IDs únicos:
-     ```html
-     <button class="timeline-toggle" aria-expanded="false" aria-controls="timeline-detail-1" id="timeline-btn-1" type="button">
-       <span class="timeline-year">2002–2003</span>
-       <span class="timeline-title">Sporting de Lisboa</span>
-     </button>
-     <p class="timeline-detail" id="timeline-detail-1" role="region" aria-labelledby="timeline-btn-1" hidden>
-       ...
-     </p>
-     ```
-  2. En `script.js`: Sincronizar la visibilidad semántica (`hidden` o `visibility`):
-     ```javascript
-     toggleButton.addEventListener("click", function () {
-       var isOpen = item.classList.contains("is-open");
-       var detail = item.querySelector(".timeline-detail");
-       item.classList.toggle("is-open", !isOpen);
-       toggleButton.setAttribute("aria-expanded", String(!isOpen));
-       if (detail) {
-         detail.hidden = isOpen;
-       }
-     });
-     ```
-  3. En `styles.css`: Asegurar compatibilidad de transiciones con `visibility: hidden;` o gestión controlada de `hidden`.
+- **Corrección aplicada:** botones con `aria-controls` + `id` únicos, paneles con `hidden`, `role="region"` y `aria-labelledby`; `script.js` sincroniza `detail.hidden` con el estado `aria-expanded`.
 
----
+### A.3. Hallazgos Medios
 
-### 3.3. Hallazgos Medios
+#### [H-04] Ocupación excesiva de pantalla por la cabecera fija en móviles
+- **Severidad:** 🟡 Medio — **Estado: ✅ Resuelto**
+- **Corrección aplicada:** `position: static` para `.site-header` bajo 600px.
 
-#### [H-04] Ocupación excesiva de pantalla por la cabecera fija (*Sticky Header*) en dispositivos móviles (320px y 390px)
-- **Severidad:** 🟡 Medio
-- **Criterio:** UX Móvil / Responsive Design
-- **Archivos afectados:** `styles.css` (Líneas 45–60, 284–289), `index.html` (Líneas 12–25)
-- **Evidencia:**
-  En `@media (max-width: 600px)`, `.header-inner` cambia a `flex-direction: column; align-items: flex-start;`. En pantallas de 320px (ej. iPhone SE) y 390px (ej. iPhone 13/14), los 5 enlaces del menú envuelven en 2 o 3 filas debido al `gap: 1.25rem`. Al tener `position: sticky; top: 0; z-index: 10;`, la cabecera adquiere una altura fija de entre **140px y 170px**, bloqueando más del 30% del alto visible en vertical y más del 50% en orientación horizontal (*landscape*).
-- **Impacto:** Severa reducción del área de lectura y frustración de navegación en pantallas estrechas.
-- **Recomendación de corrección:**
-  - Desactivar `position: sticky` en móviles por debajo de 600px (`position: static;` o relativo), o implementar un botón de menú colapsable (hamburguesa accesible) para pantallas pequeñas.
-
----
-
-#### [H-05] Objetivos táctiles reducidos (*Touch Target Size*) en enlaces de navegación
-- **Severidad:** 🟡 Medio
-- **Criterio WCAG:** 2.5.8 Target Size (Minimum) (WCAG 2.2 Nivel AA) / UX Móvil
-- **Archivo afectado:** `styles.css` (Líneas 82–86, 274–277)
-- **Evidencia:**
-  Los selectores `.main-nav a` y `.footer-inner a` no definen relleno (`padding`) táctil ni propiedad de visualización en bloque. El área clickable/táctil está limitada a la caja de texto (~24px de altura), lo que roza el límite mínimo absoluto de 24×24px de WCAG 2.2 AA y no alcanza la recomendación óptima para móviles de 44×44px o 48×48px.
-- **Impacto:** Dificultad para pulsar enlaces con precisión en pantallas táctiles, provocando toques accidentales en enlaces contiguos.
-- **Recomendación de corrección:**
-  Añadir relleno táctil en los enlaces de navegación:
-  ```css
-  .main-nav a {
-    display: inline-block;
-    padding: 0.5rem 0.6rem;
-    color: #fff;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  ```
-
----
+#### [H-05] Objetivos táctiles reducidos en enlaces de navegación
+- **Severidad:** 🟡 Medio — **Estado: ✅ Resuelto**
+- **Criterio WCAG:** 2.5.8 Target Size (Minimum)
+- **Corrección aplicada:** `padding: 0.5rem 0.6rem` y `display: inline-block` en `.main-nav a`.
 
 #### [H-06] Enlace externo a Wikipedia sin advertencia de apertura en nueva pestaña
-- **Severidad:** 🟡 Medio
-- **Criterio WCAG:** 3.2.5 Change on Request (Buenas prácticas AAA / Usabilidad AA)
-- **Archivo afectado:** `index.html` (Línea 207)
-- **Evidencia:**
-  ```html
-  <li><a href="https://es.wikipedia.org/wiki/Cristiano_Ronaldo" target="_blank" rel="noopener noreferrer">Wikipedia</a></li>
-  ```
-  El enlace abre una ventana externa sin proporcionar indicación visual (ícono de enlace externo) ni textual para lectores de pantalla.
-- **Impacto:** Puede desorientar a usuarios con baja visión o que utilizan lectores de pantalla al cambiar el contexto de navegación sin previo aviso.
-- **Recomendación de corrección:**
-  Incorporar una aclaración accesible:
-  ```html
-  <a href="https://es.wikipedia.org/wiki/Cristiano_Ronaldo" target="_blank" rel="noopener noreferrer">
-    Wikipedia <span class="visually-hidden">(se abre en una nueva pestaña)</span>
-  </a>
-  ```
-  (Acompañado de la clase utilitaria `.visually-hidden` en CSS).
+- **Severidad:** 🟡 Medio — **Estado: ✅ Resuelto**
+- **Corrección aplicada:** texto oculto accesible `(se abre en una nueva pestaña)`.
 
----
+#### [H-07] Ausencia de atributos explícitos `width`/`height` en imágenes
+- **Severidad:** 🟡 Medio — **Estado: ✅ Resuelto**
+- **Corrección aplicada:** `width`/`height` intrínsecos declarados en las tres imágenes de la galería.
 
-#### [H-07] Ausencia de atributos explícitos `width` y `height` en imágenes (Riesgo CLS)
-- **Severidad:** 🟡 Medio
-- **Criterio:** Core Web Vitals (Cumulative Layout Shift) / Rendimiento UX
-- **Archivo afectado:** `index.html` (Líneas 173–195)
-- **Evidencia:**
-  Las etiquetas `<img>` de la galería cuentan con `src`, `alt` y `loading="lazy"`, pero no declaran atributos `width` y `height` ni la propiedad CSS `aspect-ratio`.
-- **Impacto:** Cuando el usuario se desplaza rápidamente y las imágenes diferidas comienzan a cargarse, la página puede experimentar saltos bruscos de contenido (*layout shifts*), perjudicando la estabilidad visual.
-- **Recomendación de corrección:**
-  Declarar dimensiones intrínsecas en HTML o definir `aspect-ratio: 16 / 9` (o la proporción correspondiente) en la clase `.gallery img` en `styles.css`.
-
----
-
-### 3.4. Hallazgos Bajos
+### A.4. Hallazgos Bajos
 
 #### [H-08] Inexistencia de soporte para `prefers-reduced-motion`
-- **Severidad:** 🔵 Bajo
-- **Criterio WCAG:** 2.3.3 Animation from Interactions (Nivel AAA / UX Best Practice)
-- **Archivo afectado:** `styles.css` (Líneas 17, 185)
-- **Evidencia:**
-  Se define desplazamiento suave global incondicional (`html { scroll-behavior: smooth; }`) y transiciones en el acordeón sin consultar la preferencia del sistema operativo del usuario.
-- **Recomendación de corrección:**
-  ```css
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-    .timeline-detail,
-    * {
-      transition: none !important;
-      animation: none !important;
-    }
-  }
-  ```
-
----
+- **Severidad:** 🔵 Bajo — **Estado: ✅ Resuelto**
 
 #### [H-09] Falta de programación defensiva en `script.js`
-- **Severidad:** 🔵 Bajo
-- **Criterio:** Robustez de JavaScript
-- **Archivo afectado:** `script.js` (Líneas 5–8)
-- **Evidencia:**
-  ```javascript
-  timelineItems.forEach(function (item) {
-    var toggleButton = item.querySelector(".timeline-toggle");
-    toggleButton.addEventListener("click", function () { ... });
-  });
-  ```
-  Si un elemento `.timeline-item` en el HTML no tuviera el botón `.timeline-toggle` (por ejemplo tras una edición de contenido), se lanzaría un error en consola `TypeError: Cannot read properties of null (reading 'addEventListener')`.
-- **Recomendación de corrección:**
-  Agregar validación temprana: `if (!toggleButton) return;`.
-
----
+- **Severidad:** 🔵 Bajo — **Estado: ✅ Resuelto**
+- **Corrección aplicada:** `if (!toggleButton || !detail) return;`.
 
 #### [H-10] Etiqueta de navegación "Contacto" incoherente con el contenido
-- **Severidad:** 🔵 Bajo
-- **Criterio:** UX / Coherencia de Navegación
-- **Archivo afectado:** `index.html` (Líneas 21, 202)
-- **Evidencia:**
-  El menú contiene un enlace `<a href="#contacto">Contacto</a>`, pero el destino (`<footer id="contacto">`) no tiene formulario de contacto, correo electrónico ni redes sociales; contiene un aviso legal/educativo y enlaces de referencia.
-- **Recomendación de corrección:**
-  Renombrar el enlace a "Referencias" o "Pie de página", o añadir una sección de contacto real si el sitio lo requiere.
-
----
+- **Severidad:** 🔵 Bajo — **Estado: ✅ Resuelto**
+- **Corrección aplicada:** renombrado a "Referencias".
 
 #### [H-11] Redundancia textual entre `alt` y `<figcaption>` en la galería
-- **Severidad:** 🔵 Bajo
-- **Criterio:** Experiencia con Lector de Pantalla
-- **Archivo afectado:** `index.html` (Líneas 174–178, 182–186, 190–194)
-- **Evidencia:**
-  El texto del `alt` repite casi exactamente el contenido visible del `<figcaption>`. Por ejemplo:
-  - `alt`: "Cristiano Ronaldo con la camiseta de la selección de Portugal durante un partido en 2018"
-  - `figcaption`: "Cristiano Ronaldo con la selección de Portugal, 2018."
-- **Recomendación de corrección:**
-  Diferenciar o sintetizar: usar el `alt` para describir detalles visuales específicos de la imagen y el `figcaption` para el contexto editorial o título de la foto.
-
----
-
-## 4. Pruebas que Deben Repetirse Tras las Correcciones
-
-Una vez aplicadas las soluciones recomendadas, deben ejecutarse las siguientes pruebas de verificación:
-
-1. **Prueba de Contraste Automática y Manual:**
-   - Validar con Color Contrast Analyzer o devtools de accesibilidad que el anillo `:focus-visible` supere el ratio 3:1 contra todos los fondos (blanco `#fff`, gris `#f4f5f7` y azul oscuro `#1b1f3b`).
-2. **Prueba de Navegación por Teclado:**
-   - Verificar la aparición y funcionalidad del *Skip link* presionando `Tab` inmediatamente al cargar la página.
-   - Navegar todos los botones de la trayectoria con `Tab`, abrirlos y cerrarlos con `Enter` y `Space`.
-3. **Prueba con Lectores de Pantalla (NVDA en Windows / VoiceOver en macOS/iOS):**
-   - Comprobar que los paneles colapsados del acordeón no sean leídos mientras su estado sea `aria-expanded="false"`.
-   - Comprobar que el cambio de estado se anuncie verbalmente al interactuar con cada botón.
-   - Comprobar el anuncio de apertura en nueva pestaña en el enlace de Wikipedia.
-4. **Prueba de Dispositivos Móviles y Viewports Específicos:**
-   - **320px (móvil ultracompacto):** Verificar que la cabecera no bloquee el área de contenido durante el desplazamiento vertical y que no exista scroll horizontal.
-   - **390px (móvil estándar):** Validar espaciado y comodidad táctil de los enlaces de cabecera y pie.
-   - **768px (tablet):** Validar correcta distribución de la rejilla de estadísticas y galería.
-   - **1024px+ (escritorio):** Confirmar alineación del contenedor y comportamiento general.
-5. **Prueba de Reducción de Movimiento:**
-   - Activar "Reducir movimiento" en las preferencias del sistema operativo y comprobar que el scroll salte instantáneamente sin animación.
-
----
-
-## 5. Alcance de la Verificación Realizada vs. Pendiente de Prueba Manual
-
-### Qué se verificó exhaustivamente en esta auditoría:
-- Análisis completo del código fuente HTML5 (`index.html`), CSS (`styles.css`) y JavaScript (`script.js`).
-- Cálculo matemático de luminosidad relativa y ratios de contraste WCAG (texto y componentes no textuales).
-- Validación de sintaxis JS (`node --check script.js`).
-- Jerarquía semántica de encabezados, estructura de landmarks (`header`, `nav`, `main`, `footer`), listas y figuras.
-- Revisión de lógica de media queries CSS para 320px, 390px, 600px, 768px y desktop.
-
-### Qué queda pendiente de probar manualmente en el navegador:
-- Simulación en emulador de dispositivos móviles reales (iOS Safari y Android Chrome) para medir la respuesta táctil exacta y altura dinámica de la barra de direcciones (*URL bar resize*).
-- Prueba con lectores de pantalla reales (NVDA, JAWS, VoiceOver, TalkBack) para escuchar la pronunciación y concordancia exacta de los atributos ARIA.
-- Verificación de la velocidad de carga de las imágenes externas de Wikimedia Commons bajo conexiones lentas (3G throttling).
+- **Severidad:** 🔵 Bajo — **Estado: ✅ Resuelto**
+- **Corrección aplicada:** `alt` diferenciado del `figcaption` en las tres imágenes.
