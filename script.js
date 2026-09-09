@@ -14,6 +14,16 @@ document.addEventListener("DOMContentLoaded", function () {
       item.classList.toggle("is-open", !isOpen);
       toggleButton.setAttribute("aria-expanded", String(!isOpen));
       detail.hidden = isOpen;
+
+      if (window.CR7Observability) {
+        var yearEl = toggleButton.querySelector(".timeline-year");
+        var titleEl = toggleButton.querySelector(".timeline-title");
+        window.CR7Observability.log("timeline_toggle", {
+          year: yearEl ? yearEl.textContent.trim() : null,
+          title: titleEl ? titleEl.textContent.trim() : null,
+          expanded: !isOpen
+        });
+      }
     });
   });
 });

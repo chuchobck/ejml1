@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Observabilidad local | CR7 Portal</title>
+  <meta name="description" content="Panel de observabilidad local del sitio: rendimiento, errores, clics y estado de sesión, guardado únicamente en localStorage." />
+  <link rel="stylesheet" href="observabilidad.css" />
+</head>
+<body>
+
+  <a href="#cr7-dashboard" class="skip-link">Saltar al contenido del panel</a>
+
+  <header class="obs-header">
+    <div class="obs-container obs-header-inner">
+      <p class="obs-logo">CR7 <span>Observabilidad</span></p>
+      <nav aria-label="Navegación">
+        <a href="index.html">Volver al sitio</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="cr7-dashboard" class="obs-container">
+
+    <section aria-labelledby="obs-intro-title" class="obs-section">
+      <h1 id="obs-intro-title">Panel de observabilidad local</h1>
+      <p>
+        Este panel muestra únicamente datos guardados en <code>localStorage</code> de tu propio
+        navegador, bajo claves con el prefijo <code>cr7-observability</code>. No hay backend,
+        servicios externos ni envío de datos: todo ocurre en tu equipo.
+      </p>
+      <p id="cr7-status" role="status" aria-live="polite" class="obs-status">Cargando panel…</p>
+    </section>
+
+    <section aria-labelledby="obs-controls-title" class="obs-section">
+      <h2 id="obs-controls-title">Controles</h2>
+      <div class="obs-controls">
+        <button type="button" id="cr7-refresh">Actualizar datos</button>
+        <button type="button" id="cr7-demo">Generar evento de demostración</button>
+        <button type="button" id="cr7-clear" class="obs-btn-danger">Limpiar almacenamiento</button>
+        <button type="button" id="cr7-download">Descargar snapshot JSON</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="obs-summary-title" class="obs-section">
+      <h2 id="obs-summary-title">Resumen</h2>
+      <dl class="obs-summary-list">
+        <dt>Generado</dt>
+        <dd id="cr7-generated-at">—</dd>
+        <dt>Eventos almacenados</dt>
+        <dd id="cr7-event-count">0</dd>
+        <dt>Estado del almacenamiento</dt>
+        <dd id="cr7-storage-state">Comprobando…</dd>
+      </dl>
+    </section>
+
+    <section aria-labelledby="obs-session-title" class="obs-section">
+      <h2 id="obs-session-title">Sesión actual</h2>
+      <div id="cr7-session">
+        <p>Aún no se ha capturado información de sesión.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="obs-events-title" class="obs-section">
+      <h2 id="obs-events-title">Eventos registrados</h2>
+      <p class="obs-hint">Se muestran los más recientes primero. Máximo 200 eventos guardados.</p>
+      <div class="obs-table-wrap">
+        <table class="obs-table">
+          <caption class="visually-hidden">Lista de eventos de observabilidad registrados</caption>
+          <thead>
+            <tr>
+              <th scope="col">Fecha y hora</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Página</th>
+              <th scope="col">Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="cr7-events-body"></tbody>
+        </table>
+        <p id="cr7-events-empty" hidden>No hay eventos registrados todavía. Navega por el sitio o genera un evento de demostración.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="obs-footer">
+    <div class="obs-container">
+      <p>Datos almacenados exclusivamente en tu navegador. Puedes limpiarlos en cualquier momento.</p>
+    </div>
+  </footer>
+
+  <script src="observabilidad.js"></script>
+</body>
+</html>
